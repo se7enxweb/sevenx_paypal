@@ -76,4 +76,52 @@ class sevenxPayPalSetup
         return array( 'ok' => true, 'created' => $created, 'webhook_id' => $id, 'stored' => $saved,
                       'message' => ( $created ? 'The webhook was created' : 'The webhook exists already' ) . ' (' . $id . ')' . ( $saved ? ' and its id is stored.' : '.' ) );
     }
+
+    /** The engine of the site's database: postgresql, mysql or sqlite. */
+    public static function engine()
+    {
+        $impl = strtolower( (string)eZINI::instance()->variable( 'DatabaseSettings', 'DatabaseImplementation' ) );
+        if ( strpos( $impl, 'postgres' ) !== false || $impl === 'pgsql' )
+            return 'postgresql';
+        if ( strpos( $impl, 'mysql' ) !== false )
+            return 'mysql';
+        return 'sqlite';
+    }
+
+    /**
+     * Creates the tables of sql/<engine>/schema.sql that the database lacks (with their sequences and indexes);
+     * existing tables are left alone. @return array ok, lines
+     */
+    public static function installSchema( $sqlDir )
+    {
+        $engine = self::engine();
+        $file = rtrim( $sqlDir, '/' ) . '/' . $engine . '/schema.sql';
+        if ( !is_readable( $file ) )
+            return array( 'ok' => false, 'lines' => array( 'no schema for ' . $engine . ' (' . $file . ')' ) );
+        $db = eZDB::instance();
+        $have = array_map( 'strtolower', array_keys( (array)$db->eZTableList() ) );
+        $lines = array( 'database: ' . $engine );
+        $ok = true;
+        foreach ( preg_split( '/;\s*(\r?\n|$)/', (string)file_get_contents( $file ) ) as $s )
+        {
+            $s = trim( preg_replace( '/^\s*--.*$/m', '', $s ) );
+            if ( $s === '' )
+                continue;
+            if ( !preg_match( '/(sevenx_paypal_(transaction|event))/', $s, $m ) )
+                continue;
+            $table = $m[1];
+            if ( in_array( $table, $have, true ) )
+                continue;
+            $r = $db->query( $s );
+            $lines[] = ( $r === false ? 'FAILED: ' : 'ran: ' ) . substr( preg_replace( '/\s+/', ' ', $s ), 0, 90 );
+            $ok = $ok && $r !== false;
+        }
+        $after = array_map( 'strtolower', array_keys( (array)$db->eZTableList() ) );
+        foreach ( array( 'sevenx_paypal_transaction', 'sevenx_paypal_event' ) as $t )
+        {
+            $lines[] = $t . ': ' . ( in_array( $t, $after, true ) ? ( in_array( $t, $have, true ) ? 'there already' : 'created' ) : 'MISSING' );
+            $ok = $ok && in_array( $t, $after, true );
+        }
+        return array( 'ok' => $ok, 'lines' => $lines );
+    }
 }

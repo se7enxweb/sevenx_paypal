@@ -12,6 +12,9 @@
  *   php extension/sevenx_paypal/bin/php/paypal.php --create-webhook [--mode=...] [--url=https://...]
  *       creates this site's webhook in the mode's app if it has none for the URL, and stores its id in the secret
  *       store; webhooks of other URLs are never touched
+ *   php extension/sevenx_paypal/bin/php/paypal.php --install-schema
+ *       creates the extension's tables that the database lacks, from sql/<database>/schema.sql (PostgreSQL, MySQL or
+ *       MariaDB, SQLite); tables that exist are left alone
  *   php extension/sevenx_paypal/bin/php/paypal.php --replay=<PayPal event id> [--mode=...]
  *       reads the event from PayPal's API (no signature needed: it comes from PayPal over the API) and runs the
  *       handlers again for it
@@ -21,9 +24,18 @@ require_once 'autoload.php';
 $cli = eZCLI::instance();
 $script = eZScript::instance( array( 'description' => 'sevenx_paypal console', 'use-session' => false, 'use-modules' => true, 'use-extensions' => true ) );
 $script->startup();
-$options = $script->getOptions( '[status][create-webhook][url:][mode:][replay:]', '', array( 'status' => 'Connection and webhooks', 'create-webhook' => 'Create this site\'s webhook',
-                                'url' => 'The webhook URL', 'mode' => 'sandbox or live (default: [PayPalSettings] Mode)', 'replay' => 'Apply an event again' ) );
+$options = $script->getOptions( '[status][create-webhook][install-schema][url:][mode:][replay:]', '', array( 'status' => 'Connection and webhooks', 'create-webhook' => 'Create this site\'s webhook',
+                                'url' => 'The webhook URL', 'mode' => 'sandbox or live (default: [PayPalSettings] Mode)', 'replay' => 'Apply an event again', 'install-schema' => 'Create the tables' ) );
 $script->initialize();
+
+if ( $options['install-schema'] )
+{
+    $r = sevenxPayPalSetup::installSchema( __DIR__ . '/../../sql' );
+    foreach ( $r['lines'] as $l )
+        $cli->output( $l );
+    $cli->output( $r['ok'] ? 'PASS' : 'FAIL' );
+    $script->shutdown( $r['ok'] ? 0 : 1 );
+}
 
 $mode = $options['mode'] ? (string)$options['mode'] : null;
 $cfg = sevenxPayPalConfig::instance( $mode );
