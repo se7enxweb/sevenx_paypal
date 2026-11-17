@@ -1,0 +1,8 @@
+/* sevenx_paypal: the box around the PayPal buttons (doc/checkout.md). Inherits the site's colors and fonts; the
+   buttons themselves are drawn by PayPal. */
+.sxpp-checkout { margin: 1.5rem 0 0; max-width: 32rem; }
+.sxpp-checkout .sxpp-label { margin: 0 0 .75rem; font-weight: 600; }
+.sxpp-checkout .sxpp-sandbox { display: inline-block; margin-left: .5rem; padding: 0 .5rem; border: 1px solid currentColor; border-radius: .25rem; font-size: .75em; font-weight: 400; text-transform: uppercase; letter-spacing: .05em; }
+.sxpp-checkout .sxpp-buttons { min-height: 3rem; }
+.sxpp-checkout .sxpp-message { margin: .75rem 0 0; }
+.sxpp-checkout .sxpp-message[hidden] { display: none; }

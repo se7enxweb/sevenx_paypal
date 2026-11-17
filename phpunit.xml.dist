@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  sevenx_paypal unit tests: amounts, settings, signatures, the API client, the payment flows and the webhook, against
+  a recording mock of PayPal's API and an in-memory store. No database, no network, no Exponential bootstrap.
+
+  From the Exponential root:
+    php vendor/bin/phpunit -c extension/sevenx_paypal/phpunit.xml.dist
+-->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         cacheDirectory="../../var/tmp/phpunit-sevenx_paypal"
+         failOnEmptyTestSuite="true">
+    <testsuites>
+        <testsuite name="sevenx_paypal">
+            <directory suffix="Test.php">tests/unit</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

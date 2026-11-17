@@ -1,0 +1,21 @@
+{* The PayPal buttons (doc/checkout.md "Templates"), for any page: the PayPal JS SDK renders PayPal, Pay Later and the
+   debit or credit card button where PayPal offers them; javascript/sevenx_paypal_buttons.js calls the page's own JSON
+   routes. Nothing here carries an amount: the routes price what is paid on the server.
+   Input: $create (URL of the POST that answers ok and order_id), $capture (URL of the POST that answers ok, paid,
+   message, redirect), $done (where to go after success), optional $intent ('capture' or 'authorize'), $currency,
+   $body (a JSON object string sent with both POSTs), $context ('shop' needs ShopCheckout=enabled), $label (the line
+   above the buttons), $id (the element id). *}
+{def $sxppC = fetch( 'sevenx_paypal', 'checkout', hash( 'intent', cond( is_set( $intent ), $intent, 'capture' ), 'currency', cond( is_set( $currency ), $currency, '' ),
+                                                        'context', cond( is_set( $context ), $context, 'other' ) ) )}
+{if $sxppC.enabled}
+<link rel="stylesheet" href={'stylesheets/sevenx_paypal.css'|ezdesign} />
+<div class="sxpp-checkout" id="{cond( is_set( $id ), $id, 'sxpp-checkout' )|wash}" data-create="{$create|wash}" data-capture="{$capture|wash}" data-done="{$done|wash}"
+     data-body="{cond( is_set( $body ), $body, '{}' )|wash}" data-intent="{cond( is_set( $intent ), $intent, 'capture' )|wash}">
+    <p class="sxpp-label">{cond( is_set( $label ), $label, 'Or pay with PayPal'|i18n( 'extension/sevenx_paypal' ) )|wash}{if $sxppC.sandbox} <span class="sxpp-sandbox">{'Sandbox'|i18n( 'extension/sevenx_paypal' )}</span>{/if}</p>
+    <div class="sxpp-buttons" data-sxpp-buttons="1"></div>
+    <p class="sxpp-message" role="alert" hidden></p>
+</div>
+<script src="{$sxppC.sdk_url|wash}" data-namespace="sxppPayPalSdk" defer></script>
+<script src={'javascript/sevenx_paypal_buttons.js'|ezdesign} defer></script>
+{/if}
+{undef $sxppC}

@@ -1,0 +1,87 @@
+/*
+ * sevenx_paypal: the PayPal buttons (doc/checkout.md). For every .sxpp-checkout element of the page: the PayPal JS SDK
+ * (loaded by the template under the namespace sxppPayPalSdk) renders the buttons; createOrder and onApprove POST to the
+ * element's own routes (data-create, data-capture) with data-body; the server prices the payment, creates the PayPal
+ * order, and captures or authorizes it after the buyer approved. A signed-in session sends the form token of
+ * ezformtoken (X-CSRF-Token). On success the page goes to data-done (or the redirect the server answered).
+ * Copyright (C) 1998 - 2026 Exponential Foundation and 7x. GNU General Public License v2.0 (or any later version).
+ */
+(function () {
+    "use strict";
+
+    function csrfToken() {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta && meta.getAttribute("content")) return meta.getAttribute("content");
+        var field = document.querySelector('input[name="ezxform_token"]');
+        return field ? field.value : "";
+    }
+
+    function post(url, body) {
+        var headers = { "Content-Type": "application/json", "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" };
+        var token = csrfToken();
+        if (token) headers["X-CSRF-Token"] = token;
+        return fetch(url, { method: "POST", credentials: "same-origin", headers: headers, body: JSON.stringify(body) })
+            .then(function (r) {
+                return r.json().catch(function () { return { ok: false, message: "The server did not answer. Nothing was charged; please try again." }; });
+            });
+    }
+
+    function show(box, text) {
+        var p = box.querySelector(".sxpp-message");
+        if (!p) return;
+        p.textContent = text || "";
+        p.hidden = !text;
+    }
+
+    function setup(box) {
+        var sdk = window.sxppPayPalSdk;
+        var target = box.querySelector("[data-sxpp-buttons]");
+        if (!sdk || !sdk.Buttons || !target || box.getAttribute("data-sxpp-ready")) return;
+        box.setAttribute("data-sxpp-ready", "1");
+        var extra = {};
+        try { extra = JSON.parse(box.getAttribute("data-body") || "{}") || {}; } catch (e) { extra = {}; }
+        var with_ = function (fields) {
+            var out = {}, k;
+            for (k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) out[k] = extra[k];
+            for (k in fields) if (Object.prototype.hasOwnProperty.call(fields, k)) out[k] = fields[k];
+            return out;
+        };
+        sdk.Buttons({
+            style: { layout: "vertical", shape: "rect", label: "paypal" },
+            createOrder: function () {
+                show(box, "");
+                return post(box.getAttribute("data-create"), with_({})).then(function (r) {
+                    if (!r || !r.ok || !r.order_id) throw new Error((r && r.message) || "PayPal is not available right now.");
+                    return r.order_id;
+                });
+            },
+            onApprove: function (data, actions) {
+                return post(box.getAttribute("data-capture"), with_({ paypalOrderId: data.orderID })).then(function (r) {
+                    if (r && r.ok) {
+                        show(box, r.message || "");
+                        window.location.assign(r.redirect || box.getAttribute("data-done") || window.location.href);
+                        return;
+                    }
+                    if (r && r.restart && actions && actions.restart) return actions.restart();
+                    show(box, (r && r.message) || "The payment did not go through. Nothing was charged.");
+                });
+            },
+            onCancel: function () {
+                show(box, "The PayPal payment was cancelled. Nothing was charged.");
+            },
+            onError: function (err) {
+                show(box, (err && err.message) || "PayPal is not available right now. Nothing was charged.");
+            }
+        }).render(target).catch(function () {
+            show(box, "PayPal could not be shown. Please pay another way.");
+        });
+    }
+
+    function start() {
+        var boxes = document.querySelectorAll(".sxpp-checkout");
+        for (var i = 0; i < boxes.length; i++) setup(boxes[i]);
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+    else start();
+})();

@@ -1,0 +1,42 @@
+{
+    "name": "se7enxweb/sevenx_paypal",
+    "description": "PayPal Checkout for Exponential: PayPal's current REST APIs (Orders v2, Payments v2, Webhooks v1) with the PayPal JS SDK buttons (PayPal, Pay Later and cards where PayPal offers them). A shop payment gateway, buttons for any page, authorize-then-capture, refunds, verified and idempotent webhooks, and a status page in the administration. Credentials live in the kernel's secret store, never in INI files. Not the classic ezpaypal, IPN or NVP integration.",
+    "type": "ezpublish-legacy-extension",
+    "keywords": [
+        "Exponential",
+        "extension",
+        "PayPal",
+        "PayPal Checkout",
+        "Orders v2",
+        "Pay Later",
+        "payment gateway",
+        "webhooks",
+        "shop"
+    ],
+    "homepage": "https://github.com/se7enxweb/sevenx_paypal",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "7x",
+            "homepage": "https://se7enx.com",
+            "email": "info@se7enx.com",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/se7enxweb/sevenx_paypal/issues",
+        "source": "https://github.com/se7enxweb/sevenx_paypal",
+        "docs": "https://github.com/se7enxweb/sevenx_paypal/tree/main/doc"
+    },
+    "require": {
+        "php": ">=8.0",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "se7enxweb/exponential-legacy-installer": "*"
+    },
+    "minimum-stability": "stable",
+    "extra": {
+        "ezpublish-legacy-extension-name": "sevenx_paypal"
+    }
+}

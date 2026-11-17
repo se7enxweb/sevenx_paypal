@@ -1,0 +1,13 @@
+{
+    "note": "Throwaway key made by the fixture script; the certificate signs nothing else.",
+    "webhook_id": "1JE4291016473214C",
+    "cert_pem": "-----BEGIN CERTIFICATE-----\nMIIDmjCCAoKgAwIBAgIBATANBgkqhkiG9w0BAQsFADBmMSIwIAYDVQQDDBlzZXZl\nbnhfcGF5cGFsIHRlc3Qgc2lnbmVyMQswCQYDVQQGEwJYWDEVMBMGA1UEBwwMRGVm\nYXVsdCBDaXR5MRwwGgYDVQQKDBNEZWZhdWx0IENvbXBhbnkgTHRkMB4XDTI2MTEx\nNzIzNTE0NloXDTM2MTExNDIzNTE0NlowZjEiMCAGA1UEAwwZc2V2ZW54X3BheXBh\nbCB0ZXN0IHNpZ25lcjELMAkGA1UEBhMCWFgxFTATBgNVBAcMDERlZmF1bHQgQ2l0\neTEcMBoGA1UECgwTRGVmYXVsdCBDb21wYW55IEx0ZDCCASIwDQYJKoZIhvcNAQEB\nBQADggEPADCCAQoCggEBAJ+lD9i4tar/P24QlDBgeN2ERM71va+5SRlzE5cXgXW3\neLVgDyPfKIqw6xesU9XTrJjFd1JYkMlVkUP/QbRxDzMoCDkeiuV5IQLB61ObDs54\nNuWwWM0xFEaCDHd1e7slmQXtrgYtwxUKRGRTDK5UcWBo/83ioXPx8QJnWYvhDcpJ\nHX1fAd8digfksJrbmi/blBkoMb6rzkl7+Psyw5naXeFu0B+9y+Oc16KY3s/y3ICO\ndL/8Ke4FDexCTt93mVuL7RFhO4qWPQ/hJDTwJvXQz6rI0UUAFT3MA9ZHGYW1dhkF\n6BVhXt2FJFXqSMz1+uBW5UntRPW0BloN6KK4qEVANK0CAwEAAaNTMFEwHQYDVR0O\nBBYEFHRRckgkCpMuEveEJx5vvfR/qksEMB8GA1UdIwQYMBaAFHRRckgkCpMuEveE\nJx5vvfR/qksEMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAGjp\nZhXUUV22jB/sHvE1L4kOMKhuGvZujX2wThMfohzY1mOV8xPS/mTmm22nMGtpiw4Y\nCRvN5RyxAtyJzuG9a4oPslHp4aR8UofFP9TiI5fukMwLDZtfPE+Mx+3n2+GUIP5z\nO+fNkDv9SxBilUjnZgjqnqWk466EkX/9UwL57XfnZCIEtrXLBp8PJ20Hgwfo/oZt\n6d1hAt2ukn1GnTfAqIvvN3PXddsbDbALc7+3ghf0Y48Tz3UNlNxN/7DSYCxHEjxO\nUH+LrcIPl64SyML9zaXTCNBi8YTsppFZGRU+vI3F2LeecjbBVKG1aiLBuQnPSQfi\nVVE45xb/fzhIWAjku+0=\n-----END CERTIFICATE-----\n",
+    "body": "{\"id\":\"WH-TEST-0001-SIGNATURE\",\"event_version\":\"1.0\",\"create_time\":\"2026-11-17T12:00:00.000Z\",\"resource_type\":\"capture\",\"resource_version\":\"2.0\",\"event_type\":\"PAYMENT.CAPTURE.COMPLETED\",\"summary\":\"Payment completed for $ 12.34 USD\",\"resource\":{\"id\":\"2GG279541U471931P\",\"status\":\"COMPLETED\",\"amount\":{\"currency_code\":\"USD\",\"value\":\"12.34\"},\"custom_id\":\"shop-order:42\",\"supplementary_data\":{\"related_ids\":{\"order_id\":\"5O190127TN364715T\"}}}}",
+    "headers": {
+        "PAYPAL-TRANSMISSION-ID": "b2384410-f8d2-11ea-ad5b-1f2e2a3a1e00",
+        "PAYPAL-TRANSMISSION-TIME": "2026-11-17T12:00:01Z",
+        "PAYPAL-TRANSMISSION-SIG": "M41cxp4RIDOtE0PFrBC891rMaAhivb+o/qnAK0UH4/VVfJj826gsLVMCwt6Qmo8B6BpjuvnFM77LE0VFTLdisbgVCBKljOa6OL+B/Rc2g7Q4ShFpEa82IXBhDVPvb26msZlwDK7e+Glto2PsNK3cTYTJC1/2yR+4kyFVBbEuRh2dEb6Aou571eDdFcYHLNjFcSehsgS14t2SzJkt9J0wr6bR5yiopuaOdQNFNxQ5PWghJaODyMQilnUQxSsAOHvHmwWdeJWvOUzAoZIAA2oKRImHMvpU7z3pz7VKnoCN1sMzJUolQhdXVrjB/ET8Kp1jK3d1XXqMfEtlx0by6aeEUA==",
+        "PAYPAL-CERT-URL": "https://api.sandbox.paypal.com/v1/notifications/certs/CERT-360caa42-fca2a594-test",
+        "PAYPAL-AUTH-ALGO": "SHA256withRSA"
+    }
+}
