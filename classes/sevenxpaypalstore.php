@@ -121,11 +121,8 @@ class sevenxPayPalDbStore implements sevenxPayPalStore
     /** Whether the tables are there (the status page says so instead of failing). */
     public static function installed()
     {
-        $db = eZDB::instance();
-        $tables = method_exists( $db, 'eZTableList' ) ? array_keys( (array)$db->eZTableList() ) : array();
-        if ( $tables )
-            return in_array( 'sevenx_paypal_transaction', $tables, true ) && in_array( 'sevenx_paypal_event', $tables, true );
-        return true;
+        $tables = sevenxPayPalSetup::tables();
+        return in_array( 'sevenx_paypal_transaction', $tables, true ) && in_array( 'sevenx_paypal_event', $tables, true );
     }
 }
 

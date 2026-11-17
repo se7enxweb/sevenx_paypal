@@ -88,6 +88,21 @@ class sevenxPayPalSetup
         return 'sqlite';
     }
 
+    /** The extension's tables the database has (lower case names). */
+    public static function tables()
+    {
+        $db = eZDB::instance();
+        $engine = self::engine();
+        $sql = $engine === 'postgresql' ? "SELECT tablename AS name FROM pg_tables WHERE schemaname = current_schema() AND tablename LIKE 'sevenx_paypal%'"
+             : ( $engine === 'mysql' ? "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE 'sevenx_paypal%'"
+                                     : "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'sevenx_paypal%'" );
+        $rows = $db->arrayQuery( $sql );
+        $out = array();
+        foreach ( is_array( $rows ) ? $rows : array() as $r )
+            $out[] = strtolower( (string)reset( $r ) );
+        return $out;
+    }
+
     /**
      * Creates the tables of sql/<engine>/schema.sql that the database lacks (with their sequences and indexes);
      * existing tables are left alone. @return array ok, lines
@@ -99,7 +114,7 @@ class sevenxPayPalSetup
         if ( !is_readable( $file ) )
             return array( 'ok' => false, 'lines' => array( 'no schema for ' . $engine . ' (' . $file . ')' ) );
         $db = eZDB::instance();
-        $have = array_map( 'strtolower', array_keys( (array)$db->eZTableList() ) );
+        $have = self::tables();
         $lines = array( 'database: ' . $engine );
         $ok = true;
         foreach ( preg_split( '/;\s*(\r?\n|$)/', (string)file_get_contents( $file ) ) as $s )
@@ -116,7 +131,7 @@ class sevenxPayPalSetup
             $lines[] = ( $r === false ? 'FAILED: ' : 'ran: ' ) . substr( preg_replace( '/\s+/', ' ', $s ), 0, 90 );
             $ok = $ok && $r !== false;
         }
-        $after = array_map( 'strtolower', array_keys( (array)$db->eZTableList() ) );
+        $after = self::tables();
         foreach ( array( 'sevenx_paypal_transaction', 'sevenx_paypal_event' ) as $t )
         {
             $lines[] = $t . ': ' . ( in_array( $t, $after, true ) ? ( in_array( $t, $have, true ) ? 'there already' : 'created' ) : 'MISSING' );
