@@ -116,14 +116,14 @@ class sevenxPayPalPayments
             return self::fail( 'an order needs a reference' );
         $source = isset( $o['payment_source'] ) && is_array( $o['payment_source'] ) ? $o['payment_source'] : array();
         // card numbers never pass through this server in live mode (the buyer types them into PayPal's own fields)
-        if ( isset( $source['card'] ) && $this->client->mode() === 'live' )
+        if ( isset( $source['card']['number'] ) && $this->client->mode() === 'live' )
             return self::fail( 'a card payment source is for the sandbox only' );
         foreach ( $source ? array() : $this->store->find( self::T, array( 'reference' => $ref, 'status' => array( 'CREATED', 'APPROVED' ), 'mode' => $this->client->mode() ), 'id DESC', 5 ) as $old )
             if ( (int)$old['amount_minor'] === $minor && $old['currency'] === $cur && $old['intent'] === $intent && (int)$old['created'] > $this->now() - self::REUSE_SECONDS
                  && (int)$old['user_id'] === (int)( isset( $o['user_id'] ) ? $o['user_id'] : 0 ) )
                 return self::ok( 'order ready', array( 'order_id' => $old['paypal_order_id'], 'approve_url' => '', 'transaction_id' => (int)$old['id'], 'reused' => true ) );
         $requestId = isset( $o['request_id'] ) && (string)$o['request_id'] !== '' ? (string)$o['request_id']
-                   : 'sxpp-' . hash( 'sha256', $this->client->mode() . '|' . $ref . '|' . $minor . '|' . $cur . '|' . $intent . '|' . bin2hex( random_bytes( 8 ) ) );
+                   : 'sxpp-' . substr( hash( 'sha256', $this->client->mode() . '|' . $ref . '|' . $minor . '|' . $cur . '|' . $intent . '|' . bin2hex( random_bytes( 8 ) ) ), 0, 40 );
         try
         {
             $order = $this->client->createOrder( array( 'intent' => $intent, 'amount_minor' => $minor, 'currency' => $cur, 'reference_id' => substr( $ref, 0, 256 ),
@@ -186,7 +186,8 @@ class sevenxPayPalPayments
                 return self::failFrom( $e2, 'PayPal could not be asked' );
             }
         }
-        return $this->applyCapture( $row, sevenxPayPalClient::captureOf( $order ) );
+        // the order as PayPal answered it goes along (a saved method's token is in its payment_source)
+        return $this->applyCapture( $row, sevenxPayPalClient::captureOf( $order ) ) + array( 'paypal_order' => $order );
     }
 
     /**

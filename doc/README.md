@@ -19,11 +19,12 @@ PayPal Checkout for Exponential on PayPal's current REST APIs. Start with the [o
 2. [Checkout](checkout.md): the shop gateway, the buttons for any page, the order states
 3. [Webhooks](webhooks.md): verification, idempotency, handlers of other extensions, replay
 4. [Refunds](refunds.md)
-5. [Katalyst](katalyst.md): invoices, add funds, WHMCS bridge, domain holds, the gateway layer
-6. [App API](app-api.md): mobile apps with PayPal's SDKs
-7. [Security](security.md)
-8. [Testing](testing.md): unit tests and the sandbox end-to-end checks
-9. [Upgrading and versions](upgrading.md)
+5. [Saved payment methods (Vault v3)](vault.md)
+6. [Katalyst](katalyst.md): invoices, add funds, WHMCS bridge, domain holds, renewals, the gateway layer
+7. [App API](app-api.md): mobile apps with PayPal's SDKs
+8. [Security](security.md)
+9. [Testing](testing.md): unit tests and the sandbox end-to-end checks
+10. [Upgrading and versions](upgrading.md)
 
 **Support staff** (helping buyers and fixing problems)
 

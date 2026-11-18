@@ -10,8 +10,8 @@ sandbox and keep `Mode=sandbox` until the checks of [testing.md](testing.md) pas
 3. **Create App**: a name (e.g. "Exponential shop"), type **Merchant**; in the sandbox pick the sandbox business
    account that receives the test payments.
 4. Open the app: copy the **Client ID** and the **Secret** (Show).
-5. Under the app's features keep **Accept payments** on. Pay Later and card payments need nothing else; **Vault**
-   is not used yet.
+5. Under the app's features keep **Accept payments** on. Pay Later and card payments need nothing else. For saved
+   payment methods ([vault.md](vault.md)) switch on **Save payment methods** (Vault).
 
 An app can be shared with other software (a billing system, another shop). sevenx_paypal never changes or deletes
 the webhooks of other URLs in it.
@@ -79,6 +79,9 @@ Events:
 | `PAYMENT.CAPTURE.DENIED`, `PAYMENT.CAPTURE.DECLINED` | the payment failed; nothing is delivered |
 | `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.CAPTURE.REVERSED` | the refunded amount is recorded |
 | `PAYMENT.AUTHORIZATION.CREATED`, `PAYMENT.AUTHORIZATION.VOIDED` | the hold is recorded / released |
+| `VAULT.PAYMENT-TOKEN.CREATED`, `VAULT.PAYMENT-TOKEN.DELETED` | a saved method is kept / removed ([vault.md](vault.md)) |
+
+A webhook made by 1.0 lacks the two vault events: `--create-webhook` adds them to this site's webhook.
 
 A PayPal app holds at most 10 webhooks.
 

@@ -14,6 +14,11 @@ $ViewList['webhook'] = array( 'script' => 'webhook.php', 'functions' => array(),
 // the order must be the session's and the user's, so they are open like the shop's own checkout (PolicyOmitList)
 $ViewList['shop'] = array( 'script' => 'shop.php', 'functions' => array(), 'params' => array( 'Action' ) );
 
+// the buyer's saved PayPal methods (doc/vault.md): list, remove (POST with the form token), save without a purchase
+// (POST JSON methods/setup and methods/finish); the view checks the sign-in itself (PolicyOmitList), each user sees only their own
+$ViewList['methods'] = array( 'script' => 'methods.php', 'functions' => array(), 'params' => array( 'Action' ),
+                              'single_post_actions' => array( 'RemoveMethodButton' => 'Remove' ), 'post_action_parameters' => array( 'Remove' => array( 'MethodID' => 'MethodID' ) ) );
+
 // the administration page (doc/operations.md): mode, credentials (present or not), webhook state, last events and payments
 $ViewList['status'] = array( 'script' => 'status.php', 'functions' => array( 'admin' ), 'default_navigation_part' => 'ezsetupnavigationpart',
                              'single_post_actions' => array( 'CheckConnectionButton' => 'CheckConnection', 'CreateWebhookButton' => 'CreateWebhook' ),

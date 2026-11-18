@@ -37,6 +37,13 @@ Card data is typed into PayPal's own fields (PayPal's popup or hosted fields) an
 server-side `card` payment source is refused in live mode (it exists for PayPal's sandbox test cards only). The site
 stays out of PCI DSS scope for card data as far as PayPal's integration terms say; your own SAQ is yours to answer.
 
+## Saved payment methods
+
+Only PayPal's payment token id, its customer id, the method and a masked label (first letter and domain of the
+e-mail, a card's brand and last digits) are stored per user. Charges of a saved method are flagged merchant-initiated
+(`stored_credential`); a card is only ever saved through PayPal's own fields (a server-side card source is sandbox
+only). A user sees and removes only their own methods.
+
 ## Logging and personal data
 
 - `var/log/paypal.log` and the tables keep ids (PayPal order, capture, refund, authorization, event), amounts,

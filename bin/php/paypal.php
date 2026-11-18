@@ -15,6 +15,9 @@
  *   php extension/sevenx_paypal/bin/php/paypal.php --install-schema
  *       creates the extension's tables that the database lacks, from sql/<database>/schema.sql (PostgreSQL, MySQL or
  *       MariaDB, SQLite); tables that exist are left alone
+ *   php extension/sevenx_paypal/bin/php/paypal.php --write-schema-files
+ *       writes sql/oracle/schema.sql and sql/mongodb/schema.json from sevenxPayPalSchema::definition() with the kernel's
+ *       schema handlers (Oracle needs the ezoracle extension)
  *   php extension/sevenx_paypal/bin/php/paypal.php --replay=<PayPal event id> [--mode=...]
  *       reads the event from PayPal's API (no signature needed: it comes from PayPal over the API) and runs the
  *       handlers again for it
@@ -24,9 +27,31 @@ require_once 'autoload.php';
 $cli = eZCLI::instance();
 $script = eZScript::instance( array( 'description' => 'sevenx_paypal console', 'use-session' => false, 'use-modules' => true, 'use-extensions' => true ) );
 $script->startup();
-$options = $script->getOptions( '[status][create-webhook][install-schema][url:][mode:][replay:]', '', array( 'status' => 'Connection and webhooks', 'create-webhook' => 'Create this site\'s webhook',
-                                'url' => 'The webhook URL', 'mode' => 'sandbox or live (default: [PayPalSettings] Mode)', 'replay' => 'Apply an event again', 'install-schema' => 'Create the tables' ) );
+$options = $script->getOptions( '[status][create-webhook][install-schema][write-schema-files][url:][mode:][replay:]', '', array( 'status' => 'Connection and webhooks', 'create-webhook' => 'Create this site\'s webhook',
+                                'url' => 'The webhook URL', 'mode' => 'sandbox or live (default: [PayPalSettings] Mode)', 'replay' => 'Apply an event again', 'install-schema' => 'Create the tables', 'write-schema-files' => 'Write the Oracle and MongoDB schema files' ) );
 $script->initialize();
+
+if ( $options['write-schema-files'] )
+{
+    $rc = 0;
+    foreach ( array( 'oracle' => 'schema.sql', 'mongodb' => 'schema.json' ) as $engine => $file )
+    {
+        $text = sevenxPayPalSchema::schemaFileText( $engine );
+        if ( $text === null )
+        {
+            $cli->error( "FAIL: no schema handler for $engine" );
+            $rc = 1;
+            continue;
+        }
+        $path = __DIR__ . '/../../sql/' . $engine . '/' . $file;
+        if ( !is_dir( dirname( $path ) ) )
+            mkdir( dirname( $path ), 0755, true );
+        file_put_contents( $path, $text );
+        $cli->output( "written sql/$engine/$file" );
+    }
+    $cli->output( $rc ? 'FAIL' : 'PASS' );
+    $script->shutdown( $rc );
+}
 
 if ( $options['install-schema'] )
 {

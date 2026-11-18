@@ -39,6 +39,10 @@ EnableFunding[]=paylater
 DisableFunding[]
 # The PayPal buttons on the shop's payment step (design:sevenx_paypal/shop_buttons.tpl): enabled or disabled.
 ShopCheckout=disabled
+# Saved payment methods (Vault v3, doc/vault.md): enabled lets buyers save their PayPal at checkout or on
+# sevenx_paypal/methods, and lets extensions charge a saved method later (renewals). The PayPal app needs "Save payment
+# methods" (Vault) switched on in the Developer Dashboard.
+Vault=disabled
 # Seconds an API call may take.
 ApiTimeout=60
 # The log file of payments and webhooks in var/log (ids, amounts and states only).

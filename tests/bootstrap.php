@@ -5,6 +5,6 @@
  */
 putenv( 'SEVENX_PAYPAL_TESTS=1' );
 foreach ( array( 'sevenxpaypalhttp', 'sevenxpaypalconfig', 'sevenxpaypalmoney', 'sevenxpaypalwebhooksignature', 'sevenxpaypalclient', 'sevenxpaypalstore',
-                 'sevenxpaypalpayments', 'sevenxpaypalwebhook' ) as $f )
+                 'sevenxpaypalpayments', 'sevenxpaypalwebhook', 'sevenxpaypalvault' ) as $f )
     require_once __DIR__ . '/../classes/' . $f . '.php';
 require_once __DIR__ . '/sevenxPayPalMockHttp.php';

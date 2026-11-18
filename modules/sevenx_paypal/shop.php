@@ -31,7 +31,7 @@ try
     $shop = new sevenxPayPalShop( sevenxPayPalPayments::instance() );
     $posted = isset( $in['orderId'] ) ? (int)$in['orderId'] : 0;
     if ( $action === 'create' )
-        $r = $shop->create( $posted );
+        $r = $shop->create( $posted, array( 'save' => !empty( $in['save'] ) ) );
     else if ( $action === 'capture' )
         $r = $shop->capture( isset( $in['paypalOrderId'] ) && is_string( $in['paypalOrderId'] ) ? $in['paypalOrderId'] : '', $posted );
     else

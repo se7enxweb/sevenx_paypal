@@ -27,6 +27,7 @@ change (`php bin/php/ezcache.php --clear-tag=ini`).
 | `Locale` | (empty) | PayPal's language, e.g. `en_US`; empty: PayPal decides. |
 | `EnableFunding[]` | `paylater` | Funding sources the buttons ask for (`paylater`, `card`, `venmo` ...); PayPal shows only what it offers. |
 | `DisableFunding[]` | (empty) | Funding sources to hide (e.g. `card` to show PayPal only). |
+| `Vault` | `disabled` | Saved payment methods (Vault v3, [vault.md](vault.md)): buyers save PayPal at checkout or on `sevenx_paypal/methods`, extensions charge saved methods later. The app needs Vault enabled at PayPal. |
 | `ShopCheckout` | `disabled` | The PayPal buttons on the shop's payment step (`design:sevenx_paypal/shop_buttons.tpl`). |
 | `ApiTimeout` | `60` | Seconds an API call may take. |
 | `LogFile` | `paypal.log` | The log in `var/log` (ids, amounts and states only). |
@@ -85,4 +86,5 @@ AcceptSandboxPayments=disabled
 ## Template fetch
 
 `fetch( 'sevenx_paypal', 'checkout', hash( 'intent', 'capture', 'currency', 'USD', 'context', 'shop' ) )` answers
-`enabled`, `sdk_url`, `mode`, `sandbox` and `currency` for the current user ([checkout.md](checkout.md)).
+`enabled`, `sdk_url`, `mode`, `sandbox`, `currency`, `vault` and `user_id_token` (a returning buyer's id_token, Vault)
+for the current user ([checkout.md](checkout.md)). `intent` `vault` gives the SDK URL for saving without a purchase.

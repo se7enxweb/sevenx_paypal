@@ -39,7 +39,8 @@ refused with 401; use a real sandbox payment instead ([testing.md](testing.md)).
 ## Events handled
 
 See [paypal-account-setup.md](paypal-account-setup.md#4-the-webhook) for the list. The built-in handler
-(`sevenxPayPalCoreWebhookHandler`) keeps `sevenx_paypal_transaction` right: a completed capture is checked and applied
+(`sevenxPayPalCoreWebhookHandler`) keeps saved methods right (`VAULT.PAYMENT-TOKEN.CREATED` and `DELETED`,
+[vault.md](vault.md)) and `sevenx_paypal_transaction`: a completed capture is checked and applied
 (and a shop order marked paid if its page did not do it), pending and denied captures, refunds (the total refunded,
 `seller_payable_breakdown.total_refunded_amount`), voided authorizations, approved orders. A delivery that arrives
 late (the capture refunded since) never sets a paid or refunded row back.

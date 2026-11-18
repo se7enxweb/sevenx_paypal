@@ -64,7 +64,7 @@ class sevenxPayPalShop
 
     /**
      * POST create. $o may name return_url and cancel_url (https) for an approval outside the buttons' popup (PayPal's
-     * approval page sends the browser there).
+     * approval page sends the browser there), and save (true: the buyer's PayPal is saved for later, Vault v3).
      *
      * @return array ok, order_id (PayPal's), approve_url
      */
@@ -78,7 +78,15 @@ class sevenxPayPalShop
         list( $minor, $cur ) = self::amount( $order );
         if ( $minor <= 0 )
             return array( 'ok' => false, 'message' => 'There is nothing to pay.' );
+        // save the buyer's PayPal for later (Vault v3) when asked, switched on and signed in
+        $source = array();
+        $cfg = $this->payments->client()->config();
+        if ( !empty( $o['save'] ) && sevenxPayPalVault::enabled( $cfg ) && eZUser::currentUser()->isRegistered() )
+            $source = sevenxPayPalVault::vaultSource( array( 'customer_id' => ( new sevenxPayPalVault( $this->payments ) )->customerId( (int)eZUser::currentUserID() ),
+                                                             'return_url' => isset( $o['return_url'] ) ? $o['return_url'] : '',
+                                                             'cancel_url' => isset( $o['cancel_url'] ) ? $o['cancel_url'] : '', 'brand_name' => $cfg->brandName() ) );
         $r = $this->payments->begin( array( 'context' => 'shop', 'reference' => self::reference( $order->attribute( 'id' ) ), 'amount_minor' => $minor, 'currency' => $cur,
+                                            'payment_source' => $source,
                                             'intent' => 'CAPTURE', 'description' => 'Order ' . (int)$order->attribute( 'id' ), 'invoice_id' => '',
                                             'user_id' => (int)eZUser::currentUserID(), 'return_url' => isset( $o['return_url'] ) ? (string)$o['return_url'] : '',
                                             'cancel_url' => isset( $o['cancel_url'] ) ? (string)$o['cancel_url'] : '' ) );
@@ -108,6 +116,9 @@ class sevenxPayPalShop
                           'restart' => !empty( $r['retry_buyer'] ) );
         if ( !empty( $r['pending'] ) )
             return array( 'ok' => true, 'paid' => false, 'message' => 'PayPal is still processing your payment. Your order is completed as soon as PayPal confirms it.' );
+        // a method the buyer asked to save (Vault v3) is kept for this user
+        if ( !empty( $r['paypal_order'] ) && sevenxPayPalVault::vaultOfOrder( $r['paypal_order'] ) )
+            ( new sevenxPayPalVault( $this->payments ) )->rememberFromOrder( $r['paypal_order'], (int)eZUser::currentUserID(), 'shop' );
         return self::markPaid( $order, $r['transaction'], sevenxPayPalConfig::instance( $tx['mode'] ) );
     }
 

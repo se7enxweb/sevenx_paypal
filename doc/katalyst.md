@@ -40,6 +40,15 @@ total; the order is placed with method `paypal`; Katalyst authorizes it (the amo
 account), registers the name, then captures the authorization and writes the invoice. A failed registration voids
 the authorization; nothing is taken. PayPal honors an authorization for 3 days and keeps it capturable for 29.
 
+## Renewals with a saved PayPal account
+
+With sevenx_paypal's Vault on, a customer can save PayPal while paying (the billing page's "save for later") or on
+`sevenx_paypal/methods`; the billing page lists the saved accounts. A renewal of a customer without a saved card is
+charged to the saved PayPal account merchant-initiated (`expKatalystPaymentGateways::savedPayPal()`, the gateway's
+`chargeSaved()`): the same attempt row and key (`inv:<invoice>:attempt:<n>`, gateway `paypal`), the same amount check,
+receipt and numbering; a decline is retried the next day and the customer is mailed, as with a card. The daily plan
+includes such customers.
+
 ## Refunds and webhooks
 
 - Refunds from the staff invoice and payment pages go through PayPal's Refunds API (full or partial, a credit note);

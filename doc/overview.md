@@ -20,6 +20,8 @@ Credit Card** where PayPal offers them to the buyer's country and to your accoun
 - **Refunds**, full or partial ([refunds.md](refunds.md)).
 - **Webhooks.** The site's own webhook is created through the API; every delivery is verified, stored once and
   handled idempotently; other extensions add their own handlers ([webhooks.md](webhooks.md)).
+- **Saved payment methods** (Vault v3): save during a checkout or on the buyer's page, charge later, remove
+  ([vault.md](vault.md)).
 - **Status page** in the administration (Setup > PayPal) and a console ([operations.md](operations.md)).
 - **Mobile apps** get a PayPal order id for PayPal's own mobile SDK ([app-api.md](app-api.md)).
 
@@ -33,9 +35,10 @@ Credit Card** where PayPal offers them to the buyer's country and to your accoun
 | Webhooks v1 | `GET`/`POST /v1/notifications/webhooks`, `POST /v1/notifications/verify-webhook-signature`, `GET /v1/notifications/webhooks-events/{id}` | create the site's webhook, verify deliveries, replay an event |
 | JS SDK | `https://www.paypal.com/sdk/js?client-id=...` | the buttons in the browser |
 
+| Vault v3 | `POST /v3/vault/setup-tokens`, `POST`/`GET`/`DELETE /v3/vault/payment-tokens`, `id_token` | saved PayPal accounts (and cards where PayPal allows it), charged later merchant-initiated ([vault.md](vault.md)) |
+
 Every call that creates something carries a `PayPal-Request-Id`, so a repeated call gets PayPal's first answer back
-instead of a second payment. Vault v3 (saved PayPal accounts) is not used yet; an order can carry a server-side
-`payment_source`, which is where a vaulted account would go ([checkout.md](checkout.md)).
+instead of a second payment.
 
 ## Why not ezpaypal, IPN or NVP
 

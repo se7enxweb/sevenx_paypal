@@ -10,7 +10,7 @@ class sevenx_paypalInfo
     {
         return array(
             'Name' => "<a href='https://github.com/se7enxweb/sevenx_paypal'>7x Payment Gateway : PayPal</a>",
-            'Version' => "1.0.0",
+            'Version' => "1.1.0",
             'Copyright' => "Copyright (C) 1998 - 2026 <a href='https://se7enx.com/'>7x</a>",
             'Author' => "7x",
             'License' => "GNU General Public License v2.0 (or any later version)",

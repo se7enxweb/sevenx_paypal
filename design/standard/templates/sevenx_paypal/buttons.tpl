@@ -5,7 +5,8 @@
    message, redirect), $done (where to go after success), optional $intent ('capture' or 'authorize'), $currency,
    $body (a JSON object string sent with both POSTs; it is passed in from PHP, as template strings cannot hold braces),
    or $order_id (the body becomes {"orderId": <id>}), $context ('shop' needs ShopCheckout=enabled), $label (the line
-   above the buttons), $id (the element id), $form and $fields (the id of a form whose current values go with both
+   above the buttons), $id (the element id), $intent 'vault' (save a PayPal account without a purchase: create answers a
+   setup token, capture gets vaultSetupToken), $form and $fields (the id of a form whose current values go with both
    POSTs, and which: "FieldName:key,Other:key2"). *}
 {def $sxppC = fetch( 'sevenx_paypal', 'checkout', hash( 'intent', cond( is_set( $intent ), $intent, 'capture' ), 'currency', cond( is_set( $currency ), $currency, '' ),
                                                         'context', cond( is_set( $context ), $context, 'other' ) ) )}
@@ -17,7 +18,7 @@
     <div class="sxpp-buttons" data-sxpp-buttons="1"></div>
     <p class="sxpp-message" role="alert" hidden></p>
 </div>
-<script src="{$sxppC.sdk_url|wash}" data-namespace="sxppPayPalSdk" defer></script>
+<script src="{$sxppC.sdk_url|wash}" data-namespace="sxppPayPalSdk"{if $sxppC.user_id_token} data-user-id-token="{$sxppC.user_id_token|wash}"{/if} defer></script>
 <script src={'javascript/sevenx_paypal_buttons.js'|ezdesign} defer></script>
 {/if}
 {undef $sxppC}

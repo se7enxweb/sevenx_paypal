@@ -192,7 +192,9 @@ class sevenxPayPalConfig
     /** The JS SDK URL of the buttons (public: the client id is public by design). */
     public function sdkUrl( $intent = 'capture', $currency = null )
     {
-        $q = array( 'client-id' => $this->clientId, 'currency' => $currency !== null ? strtoupper( (string)$currency ) : $this->currency(),
+        // intent vault: saving without a purchase (createVaultSetupToken), no intent and no currency
+        $q = $intent === 'vault' ? array( 'client-id' => $this->clientId, 'components' => 'buttons' )
+           : array( 'client-id' => $this->clientId, 'currency' => $currency !== null ? strtoupper( (string)$currency ) : $this->currency(),
                     'intent' => $intent === 'authorize' ? 'authorize' : 'capture', 'components' => 'buttons' );
         $enable = $this->listValue( 'EnableFunding' );
         $disable = $this->listValue( 'DisableFunding' );

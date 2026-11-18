@@ -58,7 +58,8 @@
             for (k in fields) if (Object.prototype.hasOwnProperty.call(fields, k)) out[k] = fields[k];
             return out;
         };
-        sdk.Buttons({
+        var vault = box.getAttribute("data-intent") === "vault";
+        var options = {
             style: { layout: "vertical", shape: "rect", label: "paypal" },
             createOrder: function () {
                 show(box, "");
@@ -68,7 +69,8 @@
                 });
             },
             onApprove: function (data, actions) {
-                return post(box.getAttribute("data-capture"), with_({ paypalOrderId: data.orderID })).then(function (r) {
+                var fields = vault ? { vaultSetupToken: data.vaultSetupToken } : { paypalOrderId: data.orderID };
+                return post(box.getAttribute("data-capture"), with_(fields)).then(function (r) {
                     if (r && r.ok) {
                         show(box, r.message || "");
                         window.location.assign(r.redirect || box.getAttribute("data-done") || window.location.href);
@@ -84,7 +86,13 @@
             onError: function (err) {
                 show(box, (err && err.message) || "PayPal is not available right now. Nothing was charged.");
             }
-        }).render(target).catch(function () {
+        };
+        // saving a PayPal account without a purchase (Vault v3): the server's create answers a setup token
+        if (vault) {
+            options.createVaultSetupToken = options.createOrder;
+            delete options.createOrder;
+        }
+        sdk.Buttons(options).render(target).catch(function () {
             show(box, "PayPal could not be shown. Please pay another way.");
         });
     }

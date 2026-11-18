@@ -19,7 +19,23 @@ class sevenxPayPalFunctionCollection
         $cfg = sevenxPayPalConfig::instance();
         $on = $cfg->enabledForCurrentUser() && ( $context !== 'shop' || strtolower( (string)$cfg->value( 'ShopCheckout', 'disabled' ) ) === 'enabled' );
         $cur = $currency !== '' ? strtoupper( (string)$currency ) : $cfg->currency();
+        // a returning buyer with saved PayPal (Vault v3): the SDK gets data-user-id-token and shows the saved account
+        $idToken = '';
+        if ( $on && sevenxPayPalVault::enabled( $cfg ) && class_exists( 'eZUser' ) && eZUser::currentUser()->isRegistered() )
+        {
+            try
+            {
+                $vault = sevenxPayPalVault::instance();
+                if ( $vault->customerId( (int)eZUser::currentUserID() ) !== '' )
+                    $idToken = $vault->idTokenFor( (int)eZUser::currentUserID() );
+            }
+            catch ( Exception $e )
+            {
+                $idToken = '';
+            }
+        }
         return array( 'result' => array( 'enabled' => $on, 'sdk_url' => $on ? $cfg->sdkUrl( $intent, $cur ) : '', 'mode' => $cfg->mode,
-                                         'sandbox' => $cfg->mode !== 'live', 'currency' => $cur ) );
+                                         'sandbox' => $cfg->mode !== 'live', 'currency' => $cur, 'user_id_token' => $idToken,
+                                         'vault' => $on && sevenxPayPalVault::enabled( $cfg ) ) );
     }
 }

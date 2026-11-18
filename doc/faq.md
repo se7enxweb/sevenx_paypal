@@ -37,7 +37,8 @@ Any currency PayPal supports for your account. Amounts are kept in the currency'
 no decimals at PayPal.
 
 **Does it save PayPal accounts for later (vault)?**
-Not yet. Orders can carry a server-side payment source, where a vaulted account will go.
+Yes, since 1.1.0 (Vault v3, `Vault=enabled`): at checkout, on `sevenx_paypal/methods`, and charged later by an
+extension such as Katalyst's renewals. Only PayPal's token and a masked label are stored ([vault.md](vault.md)).
 
 **Does it work with the request shield?**
 Yes, with the rules of [install.md](install.md).

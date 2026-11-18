@@ -35,6 +35,14 @@ php bin/php/ezcache.php --clear-id=template,template-override,template-block,des
 
 Then reload PHP. Read the version's changelog first: settings that changed are named there.
 
+### From 1.0 to 1.1 (Vault v3)
+
+1. `paypal.php --install-schema`: creates `sevenx_paypal_vault`.
+2. `paypal.php --create-webhook --mode=<mode>` for each mode: adds `VAULT.PAYMENT-TOKEN.CREATED` and `DELETED` to this
+   site's webhook (its id stays).
+3. A site whose override resets `PolicyOmitList[]` adds `PolicyOmitList[]=sevenx_paypal/methods`.
+4. `Vault=enabled` when you want saved methods (and Vault enabled for the app at PayPal).
+
 ### PostgreSQL tables created before 1.0.0
 
 Early development builds named the sequences `sevenx_paypal_transaction_s` and `sevenx_paypal_event_s`; the kernel's

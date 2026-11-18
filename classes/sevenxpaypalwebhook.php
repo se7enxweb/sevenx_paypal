@@ -200,7 +200,7 @@ class sevenxPayPalWebhook
 }
 
 /**
- * The built-in handler: the transaction rows follow PayPal (a capture completed or denied, a refund made in PayPal's
+ * The built-in handler: saved payment methods follow PayPal (VAULT.PAYMENT-TOKEN.CREATED and DELETED); the transaction rows follow PayPal (a capture completed or denied, a refund made in PayPal's
  * dashboard, an authorization voided), and a shop order whose capture completed is marked paid the way the buttons
  * do it (when the buyer's browser closed before it came back).
  */
@@ -208,6 +208,8 @@ class sevenxPayPalCoreWebhookHandler implements sevenxPayPalWebhookHandler
 {
     public function handle( array $event, ?array $tx, sevenxPayPalPayments $payments )
     {
+        if ( strncmp( (string)$event['event_type'], 'VAULT.PAYMENT-TOKEN.', 20 ) === 0 )
+            return ( new sevenxPayPalVault( $payments ) )->fromWebhook( $event );
         if ( !$tx )
             return 'unknown';
         $type = (string)$event['event_type'];

@@ -26,6 +26,7 @@ entries of the extension's own `settings/site.ini.append.php` there too:
 ```ini
 PolicyOmitList[]=sevenx_paypal/webhook
 PolicyOmitList[]=sevenx_paypal/shop
+PolicyOmitList[]=sevenx_paypal/methods
 ```
 
 ## 3. Create the tables
@@ -34,9 +35,18 @@ PolicyOmitList[]=sevenx_paypal/shop
 php extension/sevenx_paypal/bin/php/paypal.php --install-schema
 ```
 
-It creates `sevenx_paypal_transaction` and `sevenx_paypal_event` from `sql/<database>/schema.sql` (PostgreSQL,
-MySQL/MariaDB or SQLite, from `[DatabaseSettings] DatabaseImplementation`) and leaves existing tables alone. The SQL
-files can also be run by hand.
+### The tables
+
+It creates `sevenx_paypal_transaction`, `sevenx_paypal_event` and (1.1) `sevenx_paypal_vault` where they are missing and
+leaves existing tables alone, on all five databases of Exponential:
+
+| Database | How |
+| --- | --- |
+| PostgreSQL, MySQL/MariaDB, SQLite | `sql/<database>/schema.sql` |
+| Oracle (the ezoracle extension) | the kernel's schema handler from `sevenxPayPalSchema::definition()` (= `sql/oracle/schema.sql`); `settings/ezoracle.ini.append.php` quotes the reserved column name `mode` |
+| MongoDB | the kernel's MongoDB schema handler (= `sql/mongodb/schema.json`: collections and indexes) |
+
+The files can also be run by hand. `paypal.php --write-schema-files` writes the Oracle and MongoDB files again.
 
 ## 4. Autoloads, caches, PHP
 

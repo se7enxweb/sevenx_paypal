@@ -40,6 +40,20 @@ Server-side checks without a browser can give the order PayPal's sandbox test ca
 (`begin( array( ..., 'payment_source' => array( 'card' => array( 'number' => '4032039317984658', 'expiry' => '2030-01' ) ) ) )`):
 PayPal captures or authorizes at once, so steps 3 to 6 run unattended. This is refused in live mode.
 
+## Vault v3 in the sandbox
+
+The check that proves saved methods against PayPal's sandbox (any installation with the sandbox
+credentials; it never needs the site's own mode to be sandbox): a card saved through a setup token with the sandbox
+test card (no approval in the sandbox) and read back from PayPal; an `id_token` for returning buyers; a purchase that
+saves the card (`store_in_vault ON_SUCCESS`); a merchant-initiated charge of the saved method (Katalyst renewal, paid);
+the methods removed (PayPal answers 404 for them afterwards); `VAULT.PAYMENT-TOKEN.CREATED` and `DELETED` delivered and
+verified. Saving a **PayPal account** needs a buyer to approve on PayPal's page with a sandbox **personal** account
+(Developer Dashboard > Sandbox Accounts > Create account > Personal); the guest card form cannot save a PayPal account.
+
+The unit test `sevenxPayPalVaultTest` covers the same with PayPal's API mocked: masks, the vault source, saving during
+and without a purchase, the sandbox-only card setup, the merchant-initiated charge body, declines, removal by the owner
+only, the vault webhooks and the returning buyer's id_token, and the schema of the five databases.
+
 ## Live
 
 Never pay in live mode to test. Check only that the live token works and the live webhook exists:
