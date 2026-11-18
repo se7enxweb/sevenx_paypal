@@ -203,7 +203,11 @@ class sevenxPayPalPayments
             return self::ok( 'the payment is pending at PayPal', array( 'status' => 'PENDING', 'capture_id' => $capId, 'pending' => true, 'transaction' => $row,
                                                                        'amount_minor' => (int)$row['amount_minor'], 'currency' => $row['currency'] ) );
         }
-        $why = sevenxPayPalClient::mismatch( $cap, $row['custom_id'], (int)$row['amount_minor'], $row['currency'] );
+        // a capture that was refunded since (a late webhook delivery carries the capture's state of now) was captured all
+        // the same; a row that is paid or refunded is never set back
+        $why = sevenxPayPalClient::mismatch( $cap, $row['custom_id'], (int)$row['amount_minor'], $row['currency'], array( 'COMPLETED', 'PARTIALLY_REFUNDED', 'REFUNDED' ) );
+        if ( $why !== '' && in_array( $row['status'], array( 'COMPLETED', 'PARTIALLY_REFUNDED', 'REFUNDED' ), true ) )
+            return self::fail( 'the payment does not match (' . $why . '); the row stays ' . $row['status'], array( 'mismatch' => $why, 'status' => $status, 'capture_id' => $capId ) );
         if ( $why !== '' )
         {
             $this->store->update( self::T, $row['id'], array( 'status' => $status === 'COMPLETED' ? 'MISMATCH' : 'FAILED', 'capture_id' => $capId,
@@ -211,8 +215,9 @@ class sevenxPayPalPayments
             self::log( 'capture refused order=' . $row['paypal_order_id'] . ' reason=' . $why . ' status=' . $status );
             return self::fail( 'the payment does not match (' . $why . ')', array( 'mismatch' => $why, 'status' => $status, 'capture_id' => $capId ) );
         }
-        $already = $row['status'] === 'COMPLETED';
-        $this->store->update( self::T, $row['id'], array( 'status' => 'COMPLETED', 'capture_id' => $capId, 'failure' => '', 'modified' => $this->now() ) );
+        $already = in_array( $row['status'], array( 'COMPLETED', 'PARTIALLY_REFUNDED', 'REFUNDED' ), true );
+        $state = (int)$row['refunded_minor'] <= 0 ? 'COMPLETED' : ( (int)$row['refunded_minor'] >= (int)$row['amount_minor'] ? 'REFUNDED' : 'PARTIALLY_REFUNDED' );
+        $this->store->update( self::T, $row['id'], array( 'status' => $state, 'capture_id' => $capId, 'failure' => '', 'modified' => $this->now() ) );
         if ( !$already )
             self::log( 'captured order=' . $row['paypal_order_id'] . ' capture=' . $capId . ' ref=' . $row['reference'] . ' minor=' . $row['amount_minor'] . ' ' . $row['currency'] );
         return self::ok( 'paid', array( 'status' => 'COMPLETED', 'capture_id' => $capId, 'amount_minor' => (int)$row['amount_minor'], 'currency' => $row['currency'],

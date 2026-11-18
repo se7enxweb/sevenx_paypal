@@ -15,7 +15,7 @@
     <div class="a4-pagehead-actions">
         <form method="post" action={'sevenx_paypal/status'|ezurl}>
             <button type="submit" class="a4-btn a4-btn-small" name="CheckConnectionButton" id="sxpp-check">{'Check the connection'|i18n( $pp )}</button>
-            {if or( $check|not, $check.webhook_found|not )}<button type="submit" class="a4-btn a4-btn-small a4-btn-primary" name="CreateWebhookButton" id="sxpp-create-hook">{'Create the webhook'|i18n( $pp )}</button>{/if}
+            {if or( and( $check|not, $state.webhook_id|not ), and( $check, $check.webhook_found|not ) )}<button type="submit" class="a4-btn a4-btn-small a4-btn-primary" name="CreateWebhookButton" id="sxpp-create-hook">{'Create the webhook'|i18n( $pp )}</button>{/if}
         </form>
     </div>
 </div>

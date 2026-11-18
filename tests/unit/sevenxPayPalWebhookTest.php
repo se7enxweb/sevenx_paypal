@@ -99,4 +99,14 @@ class sevenxPayPalWebhookTest extends TestCase
         $this->assertSame( 200, $r['status'] );
         $this->assertStringContainsString( 'unknown', $r['result'] );
     }
+
+    public function testALateCaptureEventAfterARefundKeepsTheRefund()
+    {
+        $this->hook()->receive( array(), self::event( 'WH-8', 'PAYMENT.CAPTURE.COMPLETED', self::capture() ) );
+        $this->p->store()->update( 'sevenx_paypal_transaction', $this->p->transaction( 'ORD1' )['id'], array( 'refunded_minor' => 400, 'status' => 'PARTIALLY_REFUNDED' ) );
+        $late = self::capture( 'PARTIALLY_REFUNDED' );
+        $r = $this->hook()->receive( array(), self::event( 'WH-9', 'PAYMENT.CAPTURE.COMPLETED', $late ) );
+        $this->assertSame( 200, $r['status'] );
+        $this->assertSame( 'PARTIALLY_REFUNDED', $this->p->transaction( 'ORD1' )['status'], 'a late delivery never sets a refunded payment back' );
+    }
 }
