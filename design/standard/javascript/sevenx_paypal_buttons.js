@@ -3,7 +3,8 @@
  * (loaded by the template under the namespace sxppPayPalSdk) renders the buttons; createOrder and onApprove POST to the
  * element's own routes (data-create, data-capture) with data-body; the server prices the payment, creates the PayPal
  * order, and captures or authorizes it after the buyer approved. A signed-in session sends the form token of
- * ezformtoken (X-CSRF-Token). On success the page goes to data-done (or the redirect the server answered).
+ * ezformtoken (X-CSRF-Token). data-form/data-fields add the current values of a form's fields (the buyer's choices;
+ * the server prices them again). On success the page goes to data-done (or the redirect the server answered).
  * Copyright (C) 1998 - 2026 Exponential Foundation and 7x. GNU General Public License v2.0 (or any later version).
  */
 (function () {
@@ -40,9 +41,20 @@
         box.setAttribute("data-sxpp-ready", "1");
         var extra = {};
         try { extra = JSON.parse(box.getAttribute("data-body") || "{}") || {}; } catch (e) { extra = {}; }
+        var formValues = function () {
+            var out = {}, form = document.getElementById(box.getAttribute("data-form") || ""), map = (box.getAttribute("data-fields") || "").split(",");
+            if (!form) return out;
+            for (var i = 0; i < map.length; i++) {
+                var pair = map[i].split(":"), el = form.elements[pair[0]];
+                if (!el || pair.length !== 2) continue;
+                out[pair[1]] = el.type === "checkbox" ? (el.checked ? 1 : 0) : el.value;
+            }
+            return out;
+        };
         var with_ = function (fields) {
-            var out = {}, k;
+            var out = {}, k, f = formValues();
             for (k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) out[k] = extra[k];
+            for (k in f) if (Object.prototype.hasOwnProperty.call(f, k)) out[k] = f[k];
             for (k in fields) if (Object.prototype.hasOwnProperty.call(fields, k)) out[k] = fields[k];
             return out;
         };
