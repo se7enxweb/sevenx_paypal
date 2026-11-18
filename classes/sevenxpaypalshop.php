@@ -62,8 +62,13 @@ class sevenxPayPalShop
         return $order;
     }
 
-    /** POST create. @return array ok, order_id (PayPal's) */
-    public function create( $postedOrderId = 0 )
+    /**
+     * POST create. $o may name return_url and cancel_url (https) for an approval outside the buttons' popup (PayPal's
+     * approval page sends the browser there).
+     *
+     * @return array ok, order_id (PayPal's), approve_url
+     */
+    public function create( $postedOrderId = 0, array $o = array() )
     {
         $order = self::checkoutOrder( $postedOrderId );
         if ( !$order )
@@ -75,10 +80,11 @@ class sevenxPayPalShop
             return array( 'ok' => false, 'message' => 'There is nothing to pay.' );
         $r = $this->payments->begin( array( 'context' => 'shop', 'reference' => self::reference( $order->attribute( 'id' ) ), 'amount_minor' => $minor, 'currency' => $cur,
                                             'intent' => 'CAPTURE', 'description' => 'Order ' . (int)$order->attribute( 'id' ), 'invoice_id' => '',
-                                            'user_id' => (int)eZUser::currentUserID() ) );
+                                            'user_id' => (int)eZUser::currentUserID(), 'return_url' => isset( $o['return_url'] ) ? (string)$o['return_url'] : '',
+                                            'cancel_url' => isset( $o['cancel_url'] ) ? (string)$o['cancel_url'] : '' ) );
         if ( !$r['ok'] )
             return array( 'ok' => false, 'message' => 'PayPal is not available right now. Please pay by card or try again later.' );
-        return array( 'ok' => true, 'order_id' => $r['order_id'] );
+        return array( 'ok' => true, 'order_id' => $r['order_id'], 'approve_url' => $r['approve_url'] );
     }
 
     /** POST capture. @return array ok, paid (bool), message */
