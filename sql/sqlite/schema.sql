@@ -21,3 +21,14 @@ CREATE TABLE sevenx_paypal_event (
 );
 CREATE UNIQUE INDEX sevenx_paypal_event_event ON sevenx_paypal_event (event_id);
 CREATE INDEX sevenx_paypal_event_order ON sevenx_paypal_event (order_id);
+-- 1.1: the saved payment methods (Vault v3): PayPal's token and customer ids, a masked label; never card data.
+CREATE TABLE sevenx_paypal_vault (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL DEFAULT 0, mode TEXT NOT NULL DEFAULT '', customer_id TEXT NOT NULL DEFAULT '',
+    payment_token_id TEXT NOT NULL DEFAULT '', method TEXT NOT NULL DEFAULT '', label TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT '', usage_type TEXT NOT NULL DEFAULT '', context TEXT NOT NULL DEFAULT '',
+    created INTEGER NOT NULL DEFAULT 0, modified INTEGER NOT NULL DEFAULT 0
+);
+CREATE UNIQUE INDEX sxpp_vault_token ON sevenx_paypal_vault (payment_token_id);
+CREATE INDEX sxpp_vault_user ON sevenx_paypal_vault (user_id, status);
+CREATE INDEX sxpp_vault_customer ON sevenx_paypal_vault (customer_id);

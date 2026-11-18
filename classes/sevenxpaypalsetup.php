@@ -61,10 +61,23 @@ class sevenxPayPalSetup
             return array( 'ok' => false, 'message' => 'The webhook URL is not known: set [WebhookSettings] Url in paypal.ini.' );
         $existing = $client->findWebhook( $url );
         $created = false;
+        $updated = false;
         if ( !$existing )
         {
             $existing = $client->createWebhook( $url );
             $created = true;
+        }
+        else
+        {
+            // this site's own webhook only: the events a newer version handles are added
+            $have = array();
+            foreach ( isset( $existing['event_types'] ) ? $existing['event_types'] : array() as $e )
+                $have[] = (string)$e['name'];
+            if ( array_diff( sevenxPayPalClient::WEBHOOK_EVENTS, $have ) && !in_array( '*', $have, true ) )
+            {
+                $client->updateWebhookEvents( (string)$existing['id'], array_values( array_unique( array_merge( $have, sevenxPayPalClient::WEBHOOK_EVENTS ) ) ) );
+                $updated = true;
+            }
         }
         $id = isset( $existing['id'] ) ? (string)$existing['id'] : '';
         if ( $id === '' )
@@ -73,70 +86,26 @@ class sevenxPayPalSetup
         $names = $client->config()->secretNames();
         if ( $store && class_exists( 'expSecrets' ) && $names['webhook_id'] !== '' )
             $saved = (bool)expSecrets::set( $names['webhook_id'], $id, 'paypal', 'PayPal ' . $client->mode() . ' webhook id of ' . $url . ' (not secret; kept with the credentials)' );
-        return array( 'ok' => true, 'created' => $created, 'webhook_id' => $id, 'stored' => $saved,
-                      'message' => ( $created ? 'The webhook was created' : 'The webhook exists already' ) . ' (' . $id . ')' . ( $saved ? ' and its id is stored.' : '.' ) );
+        return array( 'ok' => true, 'created' => $created, 'updated' => $updated, 'webhook_id' => $id, 'stored' => $saved,
+                      'message' => ( $created ? 'The webhook was created' : ( $updated ? 'The webhook\'s events were brought up to date' : 'The webhook exists already' ) )
+                                   . ' (' . $id . ')' . ( $saved ? ' and its id is stored.' : '.' ) );
     }
 
-    /** The engine of the site's database: postgresql, mysql or sqlite. */
+    /** The engine of the site's database: postgresql, mysql, sqlite, oracle or mongodb. */
     public static function engine()
     {
-        $impl = strtolower( (string)eZINI::instance()->variable( 'DatabaseSettings', 'DatabaseImplementation' ) );
-        if ( strpos( $impl, 'postgres' ) !== false || $impl === 'pgsql' )
-            return 'postgresql';
-        if ( strpos( $impl, 'mysql' ) !== false )
-            return 'mysql';
-        return 'sqlite';
+        return sevenxPayPalSchema::engine();
     }
 
     /** The extension's tables the database has (lower case names). */
     public static function tables()
     {
-        $db = eZDB::instance();
-        $engine = self::engine();
-        $sql = $engine === 'postgresql' ? "SELECT tablename AS name FROM pg_tables WHERE schemaname = current_schema() AND tablename LIKE 'sevenx_paypal%'"
-             : ( $engine === 'mysql' ? "SELECT table_name AS name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name LIKE 'sevenx_paypal%'"
-                                     : "SELECT name FROM sqlite_master WHERE type = 'table' AND name LIKE 'sevenx_paypal%'" );
-        $rows = $db->arrayQuery( $sql );
-        $out = array();
-        foreach ( is_array( $rows ) ? $rows : array() as $r )
-            $out[] = strtolower( (string)reset( $r ) );
-        return $out;
+        return sevenxPayPalSchema::existingTables();
     }
 
-    /**
-     * Creates the tables of sql/<engine>/schema.sql that the database lacks (with their sequences and indexes);
-     * existing tables are left alone. @return array ok, lines
-     */
+    /** Creates the tables the database lacks (sevenxPayPalSchema::install). @return array ok, lines */
     public static function installSchema( $sqlDir )
     {
-        $engine = self::engine();
-        $file = rtrim( $sqlDir, '/' ) . '/' . $engine . '/schema.sql';
-        if ( !is_readable( $file ) )
-            return array( 'ok' => false, 'lines' => array( 'no schema for ' . $engine . ' (' . $file . ')' ) );
-        $db = eZDB::instance();
-        $have = self::tables();
-        $lines = array( 'database: ' . $engine );
-        $ok = true;
-        foreach ( preg_split( '/;\s*(\r?\n|$)/', (string)file_get_contents( $file ) ) as $s )
-        {
-            $s = trim( preg_replace( '/^\s*--.*$/m', '', $s ) );
-            if ( $s === '' )
-                continue;
-            if ( !preg_match( '/(sevenx_paypal_(transaction|event))/', $s, $m ) )
-                continue;
-            $table = $m[1];
-            if ( in_array( $table, $have, true ) )
-                continue;
-            $r = $db->query( $s );
-            $lines[] = ( $r === false ? 'FAILED: ' : 'ran: ' ) . substr( preg_replace( '/\s+/', ' ', $s ), 0, 90 );
-            $ok = $ok && $r !== false;
-        }
-        $after = self::tables();
-        foreach ( array( 'sevenx_paypal_transaction', 'sevenx_paypal_event' ) as $t )
-        {
-            $lines[] = $t . ': ' . ( in_array( $t, $after, true ) ? ( in_array( $t, $have, true ) ? 'there already' : 'created' ) : 'MISSING' );
-            $ok = $ok && in_array( $t, $after, true );
-        }
-        return array( 'ok' => $ok, 'lines' => $lines );
+        return sevenxPayPalSchema::install( $sqlDir );
     }
 }

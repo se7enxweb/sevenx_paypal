@@ -44,3 +44,23 @@ CREATE TABLE sevenx_paypal_event (
     UNIQUE KEY sevenx_paypal_event_event (event_id),
     KEY sevenx_paypal_event_order (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 1.1: the saved payment methods (Vault v3): PayPal's token and customer ids, a masked label; never card data.
+
+CREATE TABLE sevenx_paypal_vault (
+    id int(11) NOT NULL AUTO_INCREMENT,
+    user_id int(11) NOT NULL DEFAULT 0,
+    mode varchar(10) NOT NULL DEFAULT '',
+    customer_id varchar(64) NOT NULL DEFAULT '',
+    payment_token_id varchar(64) NOT NULL DEFAULT '',
+    method varchar(16) NOT NULL DEFAULT '',
+    label varchar(128) NOT NULL DEFAULT '',
+    status varchar(16) NOT NULL DEFAULT '',
+    usage_type varchar(16) NOT NULL DEFAULT '',
+    context varchar(32) NOT NULL DEFAULT '',
+    created int(11) NOT NULL DEFAULT 0,
+    modified int(11) NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    UNIQUE KEY sxpp_vault_token (payment_token_id),
+    KEY sxpp_vault_user (user_id, status),
+    KEY sxpp_vault_customer (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

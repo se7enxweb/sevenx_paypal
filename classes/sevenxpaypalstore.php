@@ -13,6 +13,8 @@
  *                              authorization ids, what was refunded. Ids and amounts only, never a payer's data.
  *   sevenx_paypal_event        one row per webhook event received (unique by PayPal's event id): its type, the
  *                              resource id, whether the signature checked out, what the handlers did.
+ *   sevenx_paypal_vault        one row per saved payment method (Vault v3): the user, PayPal's payment token id and
+ *                              customer id, a masked label; never card data.
  *
  * The database one goes through eZDB with escaped values; the memory one serves the tests.
  */
@@ -36,7 +38,7 @@ interface sevenxPayPalStore
 /** The tables in the site's database. */
 class sevenxPayPalDbStore implements sevenxPayPalStore
 {
-    const TABLES = array( 'sevenx_paypal_transaction', 'sevenx_paypal_event' );
+    const TABLES = array( 'sevenx_paypal_transaction', 'sevenx_paypal_event', 'sevenx_paypal_vault' );
 
     protected static function table( $t )
     {
@@ -86,7 +88,7 @@ class sevenxPayPalDbStore implements sevenxPayPalStore
         $ok = $db->query( 'INSERT INTO ' . self::table( $table ) . ' (' . implode( ',', $cols ) . ') VALUES (' . implode( ',', $vals ) . ')' );
         $id = (int)$db->lastSerialID( $table, 'id' );
         // a database layer that cannot tell the new id (another sequence naming): the row by its unique key
-        $key = $table === 'sevenx_paypal_event' ? 'event_id' : 'paypal_order_id';
+        $key = $table === 'sevenx_paypal_event' ? 'event_id' : ( $table === 'sevenx_paypal_vault' ? 'payment_token_id' : 'paypal_order_id' );
         if ( $ok !== false && $id <= 0 && isset( $row[$key] ) )
         {
             $found = $db->arrayQuery( 'SELECT id FROM ' . $table . ' WHERE ' . $key . ' = ' . self::value( $db, $row[$key] ) );
@@ -128,8 +130,7 @@ class sevenxPayPalDbStore implements sevenxPayPalStore
     /** Whether the tables are there (the status page says so instead of failing). */
     public static function installed()
     {
-        $tables = sevenxPayPalSetup::tables();
-        return in_array( 'sevenx_paypal_transaction', $tables, true ) && in_array( 'sevenx_paypal_event', $tables, true );
+        return !array_diff( self::TABLES, sevenxPayPalSetup::tables() );
     }
 }
 
@@ -139,7 +140,8 @@ class sevenxPayPalMemoryStore implements sevenxPayPalStore
     public $rows = array();
     protected $next = 1;
     /** @var array table => unique columns (a duplicate throws, like the database's unique index) */
-    public $unique = array( 'sevenx_paypal_transaction' => array( 'paypal_order_id' ), 'sevenx_paypal_event' => array( 'event_id' ) );
+    public $unique = array( 'sevenx_paypal_transaction' => array( 'paypal_order_id' ), 'sevenx_paypal_event' => array( 'event_id' ),
+                            'sevenx_paypal_vault' => array( 'payment_token_id' ) );
 
     public function insert( $table, array $row )
     {

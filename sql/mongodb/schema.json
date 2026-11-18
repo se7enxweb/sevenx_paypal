@@ -1,0 +1,124 @@
+{
+    "database": "sevenx_paypal",
+    "comment": "sevenx_paypal on MongoDB: the collections and indexes the kernel's MongoDB schema handler (expMongoSchema) creates from sevenxPayPalSchema::definition(); paypal.php --install-schema does it in a running installation.",
+    "collections": [
+        {
+            "name": "sevenx_paypal_transaction",
+            "indexes": [
+                {
+                    "keys": {
+                        "id": 1
+                    },
+                    "options": {
+                        "name": "PRIMARY",
+                        "unique": true
+                    }
+                },
+                {
+                    "keys": {
+                        "paypal_order_id": 1
+                    },
+                    "options": {
+                        "name": "sxpp_tx_order",
+                        "unique": true
+                    }
+                },
+                {
+                    "keys": {
+                        "reference": 1
+                    },
+                    "options": {
+                        "name": "sxpp_tx_ref"
+                    }
+                },
+                {
+                    "keys": {
+                        "capture_id": 1
+                    },
+                    "options": {
+                        "name": "sxpp_tx_capture"
+                    }
+                },
+                {
+                    "keys": {
+                        "authorization_id": 1
+                    },
+                    "options": {
+                        "name": "sxpp_tx_auth"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "sevenx_paypal_event",
+            "indexes": [
+                {
+                    "keys": {
+                        "id": 1
+                    },
+                    "options": {
+                        "name": "PRIMARY",
+                        "unique": true
+                    }
+                },
+                {
+                    "keys": {
+                        "event_id": 1
+                    },
+                    "options": {
+                        "name": "sxpp_ev_event",
+                        "unique": true
+                    }
+                },
+                {
+                    "keys": {
+                        "order_id": 1
+                    },
+                    "options": {
+                        "name": "sxpp_ev_order"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "sevenx_paypal_vault",
+            "indexes": [
+                {
+                    "keys": {
+                        "id": 1
+                    },
+                    "options": {
+                        "name": "PRIMARY",
+                        "unique": true
+                    }
+                },
+                {
+                    "keys": {
+                        "payment_token_id": 1
+                    },
+                    "options": {
+                        "name": "sxpp_vault_token",
+                        "unique": true
+                    }
+                },
+                {
+                    "keys": {
+                        "user_id": 1,
+                        "status": 1
+                    },
+                    "options": {
+                        "name": "sxpp_vault_user"
+                    }
+                },
+                {
+                    "keys": {
+                        "customer_id": 1
+                    },
+                    "options": {
+                        "name": "sxpp_vault_customer"
+                    }
+                }
+            ]
+        }
+    ]
+}
