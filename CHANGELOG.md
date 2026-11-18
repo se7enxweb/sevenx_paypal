@@ -3,7 +3,7 @@
 All notable changes of sevenx_paypal. Versions follow doc/upgrading.md: the last position counts on (1.0.9 is followed
 by 1.0.10), and a published version is never changed.
 
-## Unreleased (1.0.0)
+## 1.0.0 (2026-11-17)
 
 - Added: PayPal Checkout on PayPal's current REST APIs: Orders v2 (create, capture, authorize), Payments v2
   (authorizations, captures, refunds) and Webhooks v1 (create, list, signature verification).
