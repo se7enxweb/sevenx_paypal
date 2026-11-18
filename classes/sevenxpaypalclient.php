@@ -18,7 +18,8 @@ class sevenxPayPalClient
     /** The events the webhook subscribes to (doc/webhooks.md). */
     const WEBHOOK_EVENTS = array( 'CHECKOUT.ORDER.APPROVED', 'CHECKOUT.ORDER.COMPLETED', 'PAYMENT.CAPTURE.COMPLETED', 'PAYMENT.CAPTURE.PENDING',
                                   'PAYMENT.CAPTURE.DENIED', 'PAYMENT.CAPTURE.DECLINED', 'PAYMENT.CAPTURE.REFUNDED', 'PAYMENT.CAPTURE.REVERSED',
-                                  'PAYMENT.AUTHORIZATION.CREATED', 'PAYMENT.AUTHORIZATION.VOIDED' );
+                                  'PAYMENT.AUTHORIZATION.CREATED', 'PAYMENT.AUTHORIZATION.VOIDED', 'VAULT.PAYMENT-TOKEN.CREATED',
+                                  'VAULT.PAYMENT-TOKEN.DELETED' );
 
     /** @var sevenxPayPalConfig */
     protected $config;
@@ -98,7 +99,8 @@ class sevenxPayPalClient
             if ( $raw !== '' || $method === 'POST' )
                 $h['Content-Type'] = 'application/json';
             if ( $requestId !== '' )
-                $h['PayPal-Request-Id'] = substr( (string)$requestId, 0, 108 );
+                // PayPal refuses longer ids on some calls (an order that saves a card answered 422 to a 69-character id)
+                $h['PayPal-Request-Id'] = strlen( (string)$requestId ) <= 64 ? (string)$requestId : 'sxpp-' . substr( hash( 'sha256', (string)$requestId ), 0, 40 );
             $r = $this->http->request( $method, $this->config->apiBase() . $path, $h, $raw );
             if ( $r['status'] === 401 && $try === 0 )
                 continue;
@@ -279,6 +281,75 @@ class sevenxPayPalClient
               . ',"webhook_event":' . trim( (string)$rawBody ) . '}';
         $r = $this->call( 'POST', '/v1/notifications/verify-webhook-signature', $body );
         return isset( $r['verification_status'] ) && $r['verification_status'] === 'SUCCESS';
+    }
+
+    /**
+     * Replaces the event list of one webhook (PATCH /v1/notifications/webhooks/{id}): used only for this site's own
+     * webhook, to add events a newer version handles.
+     */
+    public function updateWebhookEvents( $id, array $events )
+    {
+        $types = array();
+        foreach ( $events as $e )
+            $types[] = array( 'name' => (string)$e );
+        return $this->call( 'PATCH', '/v1/notifications/webhooks/' . self::id( $id ),
+                            json_encode( array( array( 'op' => 'replace', 'path' => '/event_types', 'value' => $types ) ), JSON_UNESCAPED_SLASHES ) );
+    }
+
+    // ------------------------------------------------------------------------------------------- Vault v3 (payment method tokens)
+
+    /** POST /v3/vault/setup-tokens: a token to save a payment method without a purchase. */
+    public function createSetupToken( array $paymentSource, $customerId = '', $requestId = '' )
+    {
+        $body = array( 'payment_source' => $paymentSource );
+        if ( (string)$customerId !== '' )
+            $body['customer'] = array( 'id' => (string)$customerId );
+        return $this->call( 'POST', '/v3/vault/setup-tokens', $body, $requestId );
+    }
+
+    public function getSetupToken( $id )
+    {
+        return $this->call( 'GET', '/v3/vault/setup-tokens/' . self::id( $id ) );
+    }
+
+    /** POST /v3/vault/payment-tokens from an approved setup token: the saved method's token. */
+    public function createPaymentToken( $setupTokenId, $requestId = '' )
+    {
+        return $this->call( 'POST', '/v3/vault/payment-tokens',
+                            array( 'payment_source' => array( 'token' => array( 'id' => (string)$setupTokenId, 'type' => 'SETUP_TOKEN' ) ) ), $requestId );
+    }
+
+    public function getPaymentToken( $id )
+    {
+        return $this->call( 'GET', '/v3/vault/payment-tokens/' . self::id( $id ) );
+    }
+
+    /** GET /v3/vault/payment-tokens?customer_id=: the saved methods of a PayPal customer id. */
+    public function listPaymentTokens( $customerId )
+    {
+        $r = $this->call( 'GET', '/v3/vault/payment-tokens?customer_id=' . rawurlencode( (string)$customerId ) . '&page_size=20' );
+        return isset( $r['payment_tokens'] ) ? (array)$r['payment_tokens'] : array();
+    }
+
+    /** DELETE /v3/vault/payment-tokens/{id} (204). */
+    public function deletePaymentToken( $id )
+    {
+        return $this->call( 'DELETE', '/v3/vault/payment-tokens/' . self::id( $id ) );
+    }
+
+    /**
+     * An id_token for the JS SDK's return-buyer flow (data-user-id-token): client credentials with
+     * response_type=id_token and, for a buyer with saved methods, target_customer_id.
+     */
+    public function idToken( $customerId = '' )
+    {
+        $q = 'grant_type=client_credentials&response_type=id_token' . ( (string)$customerId !== '' ? '&target_customer_id=' . rawurlencode( (string)$customerId ) : '' );
+        $r = $this->http->request( 'POST', $this->config->apiBase() . '/v1/oauth2/token',
+                                   array( 'Authorization' => 'Basic ' . base64_encode( $this->config->clientId . ':' . $this->config->secret ),
+                                          'Content-Type' => 'application/x-www-form-urlencoded', 'Accept' => 'application/json' ), $q );
+        if ( $r['status'] !== 200 || empty( $r['body']['id_token'] ) )
+            throw sevenxPayPalError::fromResponse( $r );
+        return (string)$r['body']['id_token'];
     }
 
     // ------------------------------------------------------------------------------------------- reading answers (pure)
