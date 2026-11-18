@@ -98,7 +98,8 @@ class sevenxPayPalPayments
      *
      * @param array $o context (shop, katalyst, app, ...), reference (what it pays, e.g. shop-order:12), custom_id
      *                 (sent to PayPal; defaults to the reference), amount_minor, currency, intent (CAPTURE|AUTHORIZE),
-     *                 description, invoice_id, user_id, meta (array, kept here only), return_url, cancel_url
+     *                 description, invoice_id, user_id, meta (array, kept here only), return_url, cancel_url,
+     *                 payment_source (a vaulted source; a card only in sandbox mode, for the end-to-end tests)
      * @return array ok, order_id, approve_url, transaction_id, reused
      */
     public function begin( array $o )
@@ -113,7 +114,11 @@ class sevenxPayPalPayments
             return self::fail( 'nothing to pay' );
         if ( $ref === '' )
             return self::fail( 'an order needs a reference' );
-        foreach ( $this->store->find( self::T, array( 'reference' => $ref, 'status' => array( 'CREATED', 'APPROVED' ), 'mode' => $this->client->mode() ), 'id DESC', 5 ) as $old )
+        $source = isset( $o['payment_source'] ) && is_array( $o['payment_source'] ) ? $o['payment_source'] : array();
+        // card numbers never pass through this server in live mode (the buyer types them into PayPal's own fields)
+        if ( isset( $source['card'] ) && $this->client->mode() === 'live' )
+            return self::fail( 'a card payment source is for the sandbox only' );
+        foreach ( $source ? array() : $this->store->find( self::T, array( 'reference' => $ref, 'status' => array( 'CREATED', 'APPROVED' ), 'mode' => $this->client->mode() ), 'id DESC', 5 ) as $old )
             if ( (int)$old['amount_minor'] === $minor && $old['currency'] === $cur && $old['intent'] === $intent && (int)$old['created'] > $this->now() - self::REUSE_SECONDS
                  && (int)$old['user_id'] === (int)( isset( $o['user_id'] ) ? $o['user_id'] : 0 ) )
                 return self::ok( 'order ready', array( 'order_id' => $old['paypal_order_id'], 'approve_url' => '', 'transaction_id' => (int)$old['id'], 'reused' => true ) );
@@ -125,7 +130,7 @@ class sevenxPayPalPayments
                                                         'custom_id' => $custom, 'invoice_id' => isset( $o['invoice_id'] ) ? (string)$o['invoice_id'] : '',
                                                         'description' => isset( $o['description'] ) ? (string)$o['description'] : '',
                                                         'brand_name' => $cfg->brandName(), 'return_url' => isset( $o['return_url'] ) ? $o['return_url'] : '',
-                                                        'cancel_url' => isset( $o['cancel_url'] ) ? $o['cancel_url'] : '' ), $requestId );
+                                                        'cancel_url' => isset( $o['cancel_url'] ) ? $o['cancel_url'] : '', 'payment_source' => $source ), $requestId );
         }
         catch ( sevenxPayPalError $e )
         {

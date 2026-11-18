@@ -122,7 +122,8 @@ class sevenxPayPalClient
      * Pure: the body of a new order of one purchase unit.
      *
      * @param array $o intent (CAPTURE|AUTHORIZE), amount_minor, currency, reference_id, custom_id, invoice_id,
-     *                 description, brand_name, return_url, cancel_url, shipping (bool, default false), locale
+     *                 description, brand_name, return_url, cancel_url, shipping (bool, default false), locale,
+     *                 payment_source (array: a vaulted source, or a sandbox test card; never a real card number)
      */
     public static function orderBody( array $o )
     {
@@ -139,8 +140,16 @@ class sevenxPayPalClient
                 $ctx[$k] = (string)$o[$k];
         if ( isset( $o['locale'] ) && preg_match( '/^[a-z]{2}-[A-Z]{2}$/D', (string)$o['locale'] ) )
             $ctx['locale'] = (string)$o['locale'];
-        return array( 'intent' => isset( $o['intent'] ) && strtoupper( $o['intent'] ) === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE',
-                      'purchase_units' => array( $unit ), 'application_context' => $ctx );
+        $body = array( 'intent' => isset( $o['intent'] ) && strtoupper( $o['intent'] ) === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE',
+                       'purchase_units' => array( $unit ), 'application_context' => $ctx );
+        // a payment source given by the server (a vaulted PayPal account, or the sandbox's test card in the end-to-end
+        // tests): no buyer approval step, so no application_context
+        if ( isset( $o['payment_source'] ) && is_array( $o['payment_source'] ) && $o['payment_source'] )
+        {
+            $body['payment_source'] = $o['payment_source'];
+            unset( $body['application_context'] );
+        }
+        return $body;
     }
 
     /** POST /v2/checkout/orders. @return array the order (id, status CREATED, links: approve) */

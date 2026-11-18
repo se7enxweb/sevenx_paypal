@@ -193,4 +193,17 @@ class sevenxPayPalPaymentsTest extends TestCase
         $keys = array_map( function ( $q ) { return $q['headers']['PayPal-Request-Id']; }, $this->http->to( '#/refund$#' ) );
         $this->assertCount( 2, array_unique( $keys ), 'each refund has its own request id' );
     }
+
+    public function testAPaymentSourceSkipsApprovalAndACardIsSandboxOnly()
+    {
+        $r = $this->p->begin( array( 'reference' => 'k:src', 'amount_minor' => 100, 'currency' => 'USD',
+                                     'payment_source' => array( 'card' => array( 'number' => '4032039317984658', 'expiry' => '2030-01' ) ) ) );
+        $this->assertTrue( $r['ok'] );
+        $body = json_decode( $this->http->to( '#^/v2/checkout/orders$#' )[0]['body'], true );
+        $this->assertArrayHasKey( 'payment_source', $body );
+        $this->assertArrayNotHasKey( 'application_context', $body );
+        $live = new sevenxPayPalPayments( new sevenxPayPalClient( new sevenxPayPalConfig( array(), function () { return str_repeat( 'k', 80 ); }, 'sandbox' ), $this->http ),
+                                          new sevenxPayPalMemoryStore() );
+        $this->assertTrue( $live->begin( array( 'reference' => 'k:src2', 'amount_minor' => 100, 'currency' => 'USD' ) )['ok'] );
+    }
 }
