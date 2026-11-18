@@ -85,6 +85,13 @@ class sevenxPayPalDbStore implements sevenxPayPalStore
         $db->begin();
         $ok = $db->query( 'INSERT INTO ' . self::table( $table ) . ' (' . implode( ',', $cols ) . ') VALUES (' . implode( ',', $vals ) . ')' );
         $id = (int)$db->lastSerialID( $table, 'id' );
+        // a database layer that cannot tell the new id (another sequence naming): the row by its unique key
+        $key = $table === 'sevenx_paypal_event' ? 'event_id' : 'paypal_order_id';
+        if ( $ok !== false && $id <= 0 && isset( $row[$key] ) )
+        {
+            $found = $db->arrayQuery( 'SELECT id FROM ' . $table . ' WHERE ' . $key . ' = ' . self::value( $db, $row[$key] ) );
+            $id = is_array( $found ) && $found ? (int)$found[0]['id'] : 0;
+        }
         $db->commit();
         if ( $ok === false || $id <= 0 )
             throw new RuntimeException( 'the row could not be written to ' . $table );

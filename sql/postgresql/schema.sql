@@ -1,8 +1,8 @@
 -- sevenx_paypal (doc/install.md): the PayPal orders this site created and the webhook events it received.
 -- Ids, amounts (minor units) and states only; never a payer's name, e-mail or address.
-CREATE SEQUENCE sevenx_paypal_transaction_s START 1 INCREMENT 1 MAXVALUE 9223372036854775807 MINVALUE 1 CACHE 1;
+CREATE SEQUENCE sevenx_paypal_transaction_id_seq START 1 INCREMENT 1 MAXVALUE 9223372036854775807 MINVALUE 1 CACHE 1;
 CREATE TABLE sevenx_paypal_transaction (
-    id integer DEFAULT nextval('sevenx_paypal_transaction_s'::text) NOT NULL,
+    id integer DEFAULT nextval('sevenx_paypal_transaction_id_seq'::text) NOT NULL,
     paypal_order_id varchar(64) NOT NULL DEFAULT '',
     mode varchar(10) NOT NULL DEFAULT 'sandbox',
     context varchar(32) NOT NULL DEFAULT '',
@@ -27,9 +27,9 @@ CREATE INDEX sevenx_paypal_transaction_ref ON sevenx_paypal_transaction (referen
 CREATE INDEX sevenx_paypal_transaction_capture ON sevenx_paypal_transaction (capture_id);
 CREATE INDEX sevenx_paypal_transaction_auth ON sevenx_paypal_transaction (authorization_id);
 
-CREATE SEQUENCE sevenx_paypal_event_s START 1 INCREMENT 1 MAXVALUE 9223372036854775807 MINVALUE 1 CACHE 1;
+CREATE SEQUENCE sevenx_paypal_event_id_seq START 1 INCREMENT 1 MAXVALUE 9223372036854775807 MINVALUE 1 CACHE 1;
 CREATE TABLE sevenx_paypal_event (
-    id integer DEFAULT nextval('sevenx_paypal_event_s'::text) NOT NULL,
+    id integer DEFAULT nextval('sevenx_paypal_event_id_seq'::text) NOT NULL,
     event_id varchar(64) NOT NULL DEFAULT '',
     mode varchar(10) NOT NULL DEFAULT 'sandbox',
     event_type varchar(64) NOT NULL DEFAULT '',
